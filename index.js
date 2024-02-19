@@ -1,38 +1,23 @@
-import fs from "fs";
-import handlebars from "handlebars";
-import { marked } from "marked";
 import path from "path";
+import generateStaticSite from "./generator.js";
 
-function convertMarkdownToHtml(markdownPath) {
-    const markdownContent = fs.readFileSync(markdownPath, "utf-8");
-    return marked.parse(markdownContent);
+const INPUT_DIR_PATH = "./data";
+const OUTPUT_DIR_PATH = "./dist";
+const TEMPLATE_FILE_PATH = process.argv[2] || "templates/default.html";
+
+async function main() {
+  try {
+    const baseDirPath = process.cwd();
+    const inputDirPath = path.join(baseDirPath, INPUT_DIR_PATH);
+    const ouputDirPath = path.join(baseDirPath, OUTPUT_DIR_PATH);
+    const templateFilePath = path.join(baseDirPath, TEMPLATE_FILE_PATH);
+
+    generateStaticSite(inputDirPath, ouputDirPath, templateFilePath);
+  } catch (err) {
+    console.error("Error generating static site:", err);
+  }
 }
 
-function populateTemplate(templatePath, templateData) {
-    const templateContent = fs.readFileSync(templatePath, "utf-8");
-    const compiledTemplate = handlebars.compile(templateContent);
-    return compiledTemplate(templateData)
-}
-
-try {
-    const files = fs.readdirSync("./data/");
-    files.forEach(file => {
-        if (!file.endsWith(".md")) {
-            return;
-        }
-
-        const inputFilePath = path.join("./data/", file)
-        const outputFilePath = path.join("./dist/", file.replace(".md", ".html"))
-
-        const title = "My title";
-        const content = convertMarkdownToHtml(inputFilePath);
-        const templateContent = { title, content };
-        const populatedTemplateContent = populateTemplate("./templates/index.html", templateContent);
-
-        fs.mkdirSync(path.dirname(outputFilePath), { recursive: true })
-        fs.writeFileSync(outputFilePath, populatedTemplateContent);
-    });
-} catch (err) {
-    console.error(err);
-}
-console.log("Done")
+(async () => {
+  await main();
+})();
