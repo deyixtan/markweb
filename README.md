@@ -2,7 +2,7 @@
 
 A minimal yet flexible Markdown-based static site generator.
 
-## Version 1.0.0
+## Version 1.0.1
 
 ## Features
 
@@ -43,3 +43,66 @@ npm run start <template_path>
 ```
 
 The generated HTML files, along with any necessary assets, will be generated in the `dist` directory.
+
+### Continuous Deployment to GitHub Pages
+
+1. Create a GitHub workflow (`./github/workflows/build_and_deploy.yml`) with the code provided in your content repository:
+
+```yml
+name: Build and Deploy Static Site
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+
+    steps:
+      - name: Clone md-ssg
+        uses: actions/checkout@v3
+        with:
+          repository: deyixtan/md-ssg
+
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+        with:
+          path: data
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Generate static content
+        run: |
+          npm run start
+
+      - name: Handle entry page
+        run: |
+          cd dist
+          echo "<script>location.href = \"README.html\"</script>" > index.html
+          touch .nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+```
+
+2. When you push new Markdown changes into your content repository, the above GitHub workflow is triggered.
+
+3. The workflow will regenerate your static site using the updated content and automatically deploy it to your GitHub Pages URL. The updated site will be live at `https://<username>.github.io/<repo_name>`.
