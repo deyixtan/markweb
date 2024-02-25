@@ -1,10 +1,11 @@
 import fs from "fs/promises";
 import handlebars from "handlebars";
+import hljs from "highlight.js";
+import DOMPurify from 'isomorphic-dompurify';
+import beautify from "js-beautify";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import path from "path";
-import beautify from "js-beautify";
-import hljs from "highlight.js";
 
 const marked = new Marked(
   markedHighlight({
@@ -97,9 +98,10 @@ async function processMarkdownFile(markdownFile, templateFilePath, navigationCon
 
   const mdContent = await fs.readFile(oldPath, "utf-8");
   const htmlContent = marked.use({ gfm: true }).parse(mdContent);
+  const purifiedHtmlContent = DOMPurify.sanitize(htmlContent);
   const templateContent = await fs.readFile(templateFilePath, "utf-8");
   const compiledTemplate = handlebars.compile(templateContent);
-  const populatedContent = compiledTemplate({ content: htmlContent, navigation: navigationContent });
+  const populatedContent = compiledTemplate({ content: purifiedHtmlContent, navigation: navigationContent });
   const formattedContent = beautify.html(populatedContent, { indent_size: 2 });
 
   await fs.rename(oldPath, newPath);

@@ -1,6 +1,6 @@
 {
   "name": "md-ssg",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "A simple markdown static site generator.",
   "author": "deyixtan",
   "license": "ISC",
@@ -13,6 +13,7 @@
   "dependencies": {
     "handlebars": "^4.7.8",
     "highlight.js": "^11.9.0",
+    "isomorphic-dompurify": "^2.4.0",
     "js-beautify": "^1.15.1",
     "marked": "^12.0.0",
     "marked-highlight": "^2.1.1"
