@@ -2,7 +2,7 @@
 
 A minimal yet flexible Markdown-based static site generator.
 
-## Version 1.3.1
+## Version 1.3.2
 
 ## Features
 
@@ -46,7 +46,7 @@ The generated HTML files, along with any necessary assets, will be generated in 
 
 ### Continuous Deployment to GitHub Pages
 
-1. Create a GitHub workflow (`./github/workflows/build_and_deploy.yml`) with the code provided in your content repository:
+1. Create a GitHub workflow (`.github/workflows/build_and_deploy.yml`) with the code provided in your content repository:
 
 ```yml
 name: Build and Deploy Static Site
@@ -85,7 +85,7 @@ jobs:
 
       - name: Generate static content
         run: |
-          npm run start
+          npm run start "${{ vars.THEME_PATH || '' }}"
 
       - name: Handle entry page
         run: |
@@ -103,6 +103,8 @@ jobs:
         uses: actions/deploy-pages@v2
 ```
 
-2. When you push new Markdown changes into your content repository, the above GitHub workflow is triggered.
+2. [OPTIONAL] Select a specific template by assigning its file path to the `THEME_PATH` repository variable (found at `https://github.com/<username>/<repo_name>/settings/variables/actions`).
 
-3. The workflow will regenerate your static site using the updated content and automatically deploy it to your GitHub Pages URL. The updated site will be live at `https://<username>.github.io/<repo_name>`.
+3. When you push new Markdown changes into your content repository, the above GitHub workflow is triggered.
+
+4. The workflow will regenerate your static site using the updated content and automatically deploy it to your GitHub Pages URL. The updated site will be live at `https://<username>.github.io/<repo_name>`.
