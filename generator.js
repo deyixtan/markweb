@@ -6,13 +6,16 @@ import path from "path";
 import beautify from "js-beautify";
 import hljs from "highlight.js";
 
-// taken from https://github.com/markedjs/marked-highlight
 const marked = new Marked(
   markedHighlight({
     langPrefix: "hljs language-",
     highlight(code, lang, info) {
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
+      if (lang === "mermaid") {
+        return `<div class="mermaid">${code}</div>`;
+      } else {
+        const language = hljs.getLanguage(lang) ? lang : "plaintext";
+        return hljs.highlight(code, { language }).value;
+      }
     },
   })
 );
