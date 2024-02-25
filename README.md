@@ -2,7 +2,7 @@
 
 A minimal yet flexible Markdown-based static site generator.
 
-## Version 1.0.1
+## Version 1.1.0
 
 ## Features
 
