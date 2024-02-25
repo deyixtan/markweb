@@ -52,7 +52,7 @@ async function generateNavigation(outputDirPath, currMarkdownFilePath) {
   let content = "";
 
   lines.forEach((line) => {
-    const match = line.match(/^(\s*)\* \[(.*)\]\((.*)\)\s*$/);
+    const match = line.match(/^(\s*)[\*\-] \[(.*)\]\((.*)\)\s*$/);
     if (!match) return;
 
     const prefix = match[1];
