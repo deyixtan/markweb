@@ -3,7 +3,7 @@ import generateStaticSite from "./generator.js";
 
 const INPUT_DIR_PATH = "./data";
 const OUTPUT_DIR_PATH = "./dist";
-const TEMPLATE_FILE_PATH = process.argv[2] || "templates/holiday.html";
+const TEMPLATE_FILE_PATH = process.argv[2] || "templates/classless.html";
 
 async function main() {
   try {
