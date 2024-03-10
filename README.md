@@ -1,8 +1,8 @@
 # md-ssg
 
-A minimal yet flexible Markdown-based static site generator.
+Version **2.0.0**
 
-## Version 1.4.0
+A minimal yet flexible Markdown-based static site generator.
 
 ## Features
 

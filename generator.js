@@ -4,7 +4,9 @@ import hljs from "highlight.js";
 import DOMPurify from 'isomorphic-dompurify';
 import beautify from "js-beautify";
 import { Marked } from "marked";
+import { gfmHeadingId } from "marked-gfm-heading-id";
 import { markedHighlight } from "marked-highlight";
+import toc from "markdown-toc"
 import path from "path";
 
 const marked = new Marked(
@@ -20,6 +22,8 @@ const marked = new Marked(
     },
   })
 );
+marked.use({ gfm: true });
+marked.use(gfmHeadingId());
 
 export default async function generateStaticSite(inputDirPath, outputDirPath, templateFilePath) {
   await prepareOutputDirectory(inputDirPath, outputDirPath);
@@ -91,17 +95,27 @@ async function processMarkdownFile(markdownFile, templateFilePath, navigationCon
     await fs.rm(path.join(markdownFile.path, markdownFile.name), { force: true });
     return;
   }
-
+  
   const newFileName = markdownFile.name.replace(".md", ".html");
   const oldPath = path.join(markdownFile.path, markdownFile.name);
   const newPath = path.join(markdownFile.path, newFileName);
 
   const mdContent = await fs.readFile(oldPath, "utf-8");
-  const htmlContent = marked.use({ gfm: true }).parse(mdContent);
+  const htmlContent = marked.parse(mdContent);
   const purifiedHtmlContent = DOMPurify.sanitize(htmlContent);
+
+  const mdToc = toc(mdContent).content;
+  const htmlToc = marked.parse(mdToc);
+  const purifiedHtmlToc = DOMPurify.sanitize(htmlToc);
+
   const templateContent = await fs.readFile(templateFilePath, "utf-8");
   const compiledTemplate = handlebars.compile(templateContent);
-  const populatedContent = compiledTemplate({ content: purifiedHtmlContent, navigation: navigationContent });
+  const populatedContent = compiledTemplate({ 
+    title: markdownFile.name.replace(".md", ""),
+    navigation: navigationContent,
+    toc: purifiedHtmlToc,
+    content: purifiedHtmlContent
+  });
   const formattedContent = beautify.html(populatedContent, { indent_size: 2 });
 
   await fs.rename(oldPath, newPath);
