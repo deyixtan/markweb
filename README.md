@@ -1,6 +1,6 @@
 # md-ssg
 
-Version **2.0.0**
+Version **3.0.0**
 
 A minimal yet flexible Markdown-based static site generator.
 
@@ -85,7 +85,7 @@ jobs:
 
       - name: Generate static content
         run: |
-          npm run start "${{ vars.THEME_PATH || '' }}"
+          npm run start "${{ vars.THEME_PATH || '' }}" "${{ github.event.repository.name }}"
 
       - name: Handle entry page
         run: |

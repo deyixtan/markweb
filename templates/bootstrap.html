@@ -60,13 +60,23 @@
       mermaid.initialize({ startOnLoad: true });
     </script>
 
+    <!-- toolbar -->
+    <nav class="navbar justify-content-between">
+      <button class="btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#navOffcanvas">
+        <!-- hamburger -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+        </svg>
+      </button>
+      <button class="btn" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
+        <!-- search -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+        </svg>
+      </button>
+    </nav>
+    
     <!-- navigation offcanvas -->
-    <button class="btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#navOffcanvas">
-      <!-- hamburger -->
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-      </svg>
-    </button>
     <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="navOffcanvas">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title">Navigation</h5>
@@ -74,6 +84,21 @@
       </div>
       <div class="offcanvas-body">
         <nav>{{{navigation}}}</nav>
+      </div>
+    </div>
+
+    <!-- search modal -->
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="searchModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <input type="text" class="form-control" placeholder="What do you want to search?" id="inputSearch">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="searchResults"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -105,12 +130,51 @@
     <!-- other scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
+    <script type="module">
+      import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.mjs"
+
+      // handle search
+      const inputSearch = document.getElementById("inputSearch");
+      const containerSearch = document.getElementById("searchResults");
+
+      inputSearch.onchange = async () => {
+        const searchJsonPath = "{{{base_dir}}}".length === 0 ? "/search.json" : "/{{{base_dir}}}/search.json"; // is this right?
+        const searchResponse = await fetch(searchJsonPath);
+        const rawSearchData = await searchResponse.text();
+        const searchData = JSON.parse(rawSearchData)
+        const fuse = new Fuse(searchData, {
+          keys: ["title", "content"],
+          threshold: 0.4,
+          caseSensitive: false
+        });
+
+        const results = fuse.search(inputSearch.value);
+        containerSearch.innerHTML = "";
+        for (const item of results) {
+          const containerSearchResultItem = document.createElement("div");
+          const searchResultLink = "{{{base_dir}}}".length === 0 ? item?.item.link : `/{{{base_dir}}}/${item?.item.link}`; // is this right?
+          containerSearchResultItem.innerHTML = `
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">
+                  ${item?.item.title}
+                </h5>
+                <p class="card-text text-truncate">
+                  ${item?.item.content}
+                </p>
+                <a href="${searchResultLink}" class="btn btn-primary stretched-link">Go</a>
+              </div>
+            </div>
+          `;
+          containerSearch.appendChild(containerSearchResultItem);
+        }
+      };
+      
       // handle scroll to top logic
       const btnScrollToTop = document.getElementById("btnScrollToTop");
       window.onscroll = () => {
         btnScrollToTop.style.display = (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) ? "block" : "none";
-      }
+      };
       btnScrollToTop.onclick = () => {
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;
