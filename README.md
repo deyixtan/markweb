@@ -1,14 +1,12 @@
-# md-ssg
+# markweb
 
-Version **3.1.0**
+Version **4.0.0**
 
-A minimal yet flexible Markdown-based static site generator.
+`markweb` is a Markdown-based static site generator.
 
 ## Features
 
-- Conversion of Markdown files to HTML.
-- Recursive parsing of Markdown files within the content directory.
-- Automatic navigation pane generation based on `SUMMARY.md` located in content's root directory.
+- Recursive parsing of Markdown files to HTML.
 - Template selection for customizing overall site appearance.
 
 ## Usage
@@ -18,9 +16,9 @@ A minimal yet flexible Markdown-based static site generator.
 Clone repository and install dependencies by running the following command:
 
 ```bash
-git clone https://github.com/deyixtan/md-ssg.git
-cd md-ssg
-npm install
+git clone https://github.com/deyixtan/markweb.git
+cd markweb
+pnpm install
 ```
 
 ### Prepare Markdown Content
@@ -30,19 +28,21 @@ npm install
 
 ### Generate Static Site
 
-Run the following command to use a default template (`default.html`):
+Run the following command to use a default template (`templates/bootstrap.html`):
 
 ```bash
-npm run start
+pnpm run start
 ```
 
 You can also run the following command to use a custom template for deeper customization:
 
 ```bash
-npm run start <template_path>
+pnpm run start <template_path>
 ```
 
 The generated HTML files, along with any necessary assets, will be generated in the `dist` directory.
+
+## Deployment
 
 ### Continuous Deployment to GitHub Pages
 
@@ -69,10 +69,10 @@ jobs:
       url: ${{steps.deployment.outputs.page_url}}
 
     steps:
-      - name: Clone md-ssg
+      - name: Clone markweb
         uses: actions/checkout@v3
         with:
-          repository: deyixtan/md-ssg
+          repository: deyixtan/markweb
 
       - name: Checkout repository code
         uses: actions/checkout@v3
@@ -81,11 +81,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install
+          pnpm install
 
       - name: Generate static content
         run: |
-          npm run start "${{ vars.THEME_PATH || '' }}" "${{ github.event.repository.name }}"
+          pnpm run start "${{ vars.THEME_PATH || '' }}" "${{ github.event.repository.name }}"
 
       - name: Handle entry page
         run: |

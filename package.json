@@ -1,7 +1,7 @@
 {
-  "name": "md-ssg",
-  "version": "3.1.0",
-  "description": "A simple markdown static site generator.",
+  "name": "markweb",
+  "version": "4.0.0",
+  "description": "Markdown static site generator.",
   "author": "deyixtan",
   "license": "ISC",
   "keywords": [],
