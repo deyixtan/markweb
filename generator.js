@@ -1,12 +1,12 @@
 import fs from "fs/promises";
 import handlebars from "handlebars";
 import hljs from "highlight.js";
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 import beautify from "js-beautify";
 import { Marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
 import { markedHighlight } from "marked-highlight";
-import markdownToc from "markdown-toc"
+import markdownToc from "markdown-toc";
 import path from "path";
 
 const marked = new Marked(
@@ -25,7 +25,12 @@ const marked = new Marked(
 marked.use({ gfm: true });
 marked.use(gfmHeadingId());
 
-export default async function generateStaticSite(inputDirPath, outputDirPath, templateFilePath, base_dir) {
+export default async function generateStaticSite(
+  inputDirPath,
+  outputDirPath,
+  templateFilePath,
+  base_dir
+) {
   await prepareOutputDirectory(inputDirPath, outputDirPath);
   await processMarkdownFiles(outputDirPath, templateFilePath, base_dir);
 }
@@ -38,54 +43,71 @@ async function prepareOutputDirectory(inputDirPath, outputDirPath) {
 
 async function processMarkdownFiles(outputDirPath, templateFilePath, base_dir) {
   const fuseList = [];
+  const navigationContent = await generateNavigation(outputDirPath, base_dir);
   const markdownFiles = await findMarkdownFiles(outputDirPath);
   const promises = markdownFiles.map(async (markdownFile) => {
-    const navigationContent = await generateNavigation(outputDirPath, path.join(markdownFile.path, markdownFile.name));
-    const mdObject = await prepareMarkdownObject(outputDirPath, markdownFile, navigationContent);
-    if (!mdObject)
-      return;
-    await processMarkdownFile(mdObject, markdownFile, templateFilePath, base_dir);
+    const mdObject = await prepareMarkdownObject(
+      outputDirPath,
+      markdownFile,
+      navigationContent
+    );
+    if (!mdObject) return;
+    await processMarkdownFile(
+      mdObject,
+      markdownFile,
+      templateFilePath,
+      base_dir
+    );
     fuseList.push(mdObject);
   });
   await Promise.all(promises);
-  await fs.writeFile(path.join(outputDirPath, "search.json"), JSON.stringify(fuseList));
+  await fs.writeFile(
+    path.join(outputDirPath, "search.json"),
+    JSON.stringify(fuseList)
+  );
 }
 
-async function generateNavigation(outputDirPath, currMarkdownFilePath) {
-  const summaryFilePath = path.join(outputDirPath, "SUMMARY.md");
-
-  // check if SUMMARY.md exists
-  try {
-    await fs.access(summaryFilePath);
-  } catch {
-    return "";
-  }
-
-  // read and parse SUMMARY.md
-  const summaryContent = await fs.readFile(summaryFilePath, "utf-8");
-  const lines = summaryContent.split("\n");
+async function generateNavigation(rootDirPath, base_dir, level = 0) {
   let content = "";
 
-  lines.forEach((line) => {
-    const match = line.match(/^(\s*)[\*\-] \[(.*)\]\((.*)\)\s*$/);
-    if (!match) return;
+  const processDirectory = async (dirPath, indentLevel) => {
+    const itemNames = await fs.readdir(dirPath);
 
-    const prefix = match[1];
-    const title = match[2];
-    const link = match[3];
+    for (let itemName of itemNames) {
+      const indent = "  ".repeat(indentLevel);
+      const itemPath = path.join(dirPath, itemName);
 
-    const currDirPath = path.dirname(currMarkdownFilePath);
-    const markdownFilePath = `${outputDirPath}/${link}`;
+      // process sub-directories
+      if ((await fs.lstat(itemPath)).isDirectory()) {
+        const linkPath = "#";
+        const linkText = itemName;
 
-    let pathToMarkdown = path.relative(currDirPath, markdownFilePath);
-    if (!pathToMarkdown.startsWith(".")) {
-      pathToMarkdown = "./" + pathToMarkdown;
+        if (linkText.startsWith(".")) {
+          continue;
+        }
+
+        content += `${indent}* [${linkText}](${linkPath})\n`;
+        await processDirectory(itemPath, indentLevel + 1);
+        continue;
+      }
+
+      // process files (only markdown)
+      if (!itemName.endsWith(".md")) {
+        continue;
+      }
+      const linkPath = base_dir
+        ? path.join(
+            "/",
+            base_dir,
+            itemPath.replace(rootDirPath, "").replace(".md", ".html")
+          )
+        : itemPath.replace(".md", ".html");
+      const linkText = itemName.slice(0, -3); // trim extension
+      content += `${indent}* [${linkText}](${linkPath})\n`;
     }
-    pathToMarkdown = pathToMarkdown.endsWith(".md") ? pathToMarkdown.replace(".md", ".html") : "#";
+  };
 
-    content += `${prefix}* [${title}](${pathToMarkdown})\n`;
-  });
-
+  await processDirectory(rootDirPath, level);
   return content;
 }
 
@@ -97,25 +119,43 @@ async function findMarkdownFiles(outputDirPath) {
   return files.filter((file) => path.extname(file.name) === ".md");
 }
 
-async function prepareMarkdownObject(outputDirPath, markdownFile, navigationContent) {
+async function prepareMarkdownObject(
+  outputDirPath,
+  markdownFile,
+  navigationContent
+) {
   if (markdownFile.name === "SUMMARY.md") {
     return {};
   }
 
   const title = markdownFile.name.replace(".md", "");
   const navigation = navigationContent;
-  const content = await fs.readFile(path.join(markdownFile.path, markdownFile.name), "utf-8");
+  const content = await fs.readFile(
+    path.join(markdownFile.path, markdownFile.name),
+    "utf-8"
+  );
   const toc = markdownToc(content).content;
-  const link = path.join("/", path.relative(outputDirPath, markdownFile.path), markdownFile.name.replace(".md", ".html"));
+  const link = path.join(
+    "/",
+    path.relative(outputDirPath, markdownFile.path),
+    markdownFile.name.replace(".md", ".html")
+  );
   return { title, navigation, toc, content, link };
 }
 
-async function processMarkdownFile(markdownObject, markdownFile, templateFilePath, base_dir) {
+async function processMarkdownFile(
+  markdownObject,
+  markdownFile,
+  templateFilePath,
+  base_dir
+) {
   if (markdownFile.name === "SUMMARY.md") {
-    await fs.rm(path.join(markdownFile.path, markdownFile.name), { force: true });
+    await fs.rm(path.join(markdownFile.path, markdownFile.name), {
+      force: true,
+    });
     return;
   }
-  
+
   const newFileName = markdownFile.name.replace(".md", ".html");
   const oldPath = path.join(markdownFile.path, markdownFile.name);
   const newPath = path.join(markdownFile.path, newFileName);
@@ -131,7 +171,7 @@ async function processMarkdownFile(markdownObject, markdownFile, templateFilePat
 
   const templateContent = await fs.readFile(templateFilePath, "utf-8");
   const compiledTemplate = handlebars.compile(templateContent);
-  const populatedContent = compiledTemplate({ 
+  const populatedContent = compiledTemplate({
     title: markdownObject.title,
     navigation: purifiedNavContent,
     toc: purifiedHtmlToc,

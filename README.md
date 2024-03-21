@@ -1,6 +1,6 @@
 # md-ssg
 
-Version **3.0.0**
+Version **3.1.0**
 
 A minimal yet flexible Markdown-based static site generator.
 
