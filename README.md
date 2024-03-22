@@ -9,9 +9,7 @@ Version **4.0.0**
 - Recursive parsing of Markdown files to HTML.
 - Template selection for customizing overall site appearance.
 
-## Usage
-
-### Project Setup
+## Project Setup
 
 Clone repository and install dependencies by running the following command:
 
@@ -21,30 +19,30 @@ cd markweb
 pnpm install
 ```
 
-### Prepare Markdown Content
+## Usage
 
-1. Create a `data` directory in the project root. This will be your content directory.
-2. Place your Markdown files (`.md`) inside the `data` directory.
-
-### Generate Static Site
-
-Run the following command to use a default template (`templates/bootstrap.html`):
+Run the following command to use a default template:
 
 ```bash
-pnpm run start
+pnpm run start -t <markdown-directory> -o <output-directory> -t "templates/bootstrap.html"
 ```
 
-You can also run the following command to use a custom template for deeper customization:
+Note: To view more options, run `--help`.
 
-```bash
-pnpm run start <template_path>
+## Ignoring files during generation
+
+The `.markwebignore` (similar to how `.gitignore` works) can be specified in the root content directory.
+
+Files and directories that match any of the patterns specified in the `.markwebignore` file will avoid being generated in the static site.
+
+Example:
+
+```
+**/.git*
+.markwebignore
 ```
 
-The generated HTML files, along with any necessary assets, will be generated in the `dist` directory.
-
-## Deployment
-
-### Continuous Deployment to GitHub Pages
+## Continuous Deployment to GitHub Pages
 
 1. Create a GitHub workflow (`.github/workflows/build_and_deploy.yml`) with the code provided in your content repository:
 
@@ -85,13 +83,7 @@ jobs:
 
       - name: Generate static content
         run: |
-          pnpm run start "${{ vars.THEME_PATH || '' }}" "${{ github.event.repository.name }}"
-
-      - name: Handle entry page
-        run: |
-          cd dist
-          echo "<script>location.href = \"README.html\"</script>" > index.html
-          touch .nojekyll
+          pnpm run start -i "data/" -o "dist/" -t "${{ vars.THEME_PATH || 'templates/bootstrap.html' }}" -p "${{ github.event.repository.name }}" -d
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
