@@ -79,6 +79,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          npm install -g pnpm
           pnpm install
 
       - name: Generate static content

@@ -9,14 +9,16 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/main.ts",
-    "lint": "eslint .",
-    "format": "prettier . --write"
+    "test": "tsc --noemit && eslint .",
+    "format": "prettier . --write",
+    "prepare": "husky"
   },
   "dependencies": {
     "commander": "^12.0.0",
     "glob": "^10.3.10",
     "handlebars": "^4.7.8",
     "highlight.js": "^11.9.0",
+    "husky": "^9.0.11",
     "isomorphic-dompurify": "^2.4.0",
     "js-beautify": "^1.15.1",
     "markdown-toc": "^1.2.0",
